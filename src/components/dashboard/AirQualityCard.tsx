@@ -1,41 +1,45 @@
+import { motion } from "framer-motion";
 import { Wind } from "lucide-react";
-import type { AirQualityData } from "@/data/mockData";
+import type { AirQualityApiResponse } from "@/services/api";
 
 interface AirQualityCardProps {
-  data: AirQualityData;
+  data: AirQualityApiResponse;
 }
 
-const levelConfig = {
-  good: { label: "Bon", color: "bg-score-good", text: "text-score-good" },
-  moderate: { label: "Modéré", color: "bg-score-moderate", text: "text-score-moderate" },
-  unhealthy: { label: "Mauvais", color: "bg-score-poor", text: "text-score-poor" },
-  hazardous: { label: "Dangereux", color: "bg-score-poor", text: "text-score-poor" },
-};
-
 const AirQualityCard = ({ data }: AirQualityCardProps) => {
-  const config = levelConfig[data.level];
   const gaugeWidth = Math.min((data.aqi / 300) * 100, 100);
 
   return (
-    <div className="dashboard-card space-y-4">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.15 }}
+      className="dashboard-card space-y-4"
+    >
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Qualité de l'air</h3>
         <Wind className="h-5 w-5 text-primary" />
       </div>
 
       <div className="flex items-end gap-3">
-        <span className={`text-4xl font-bold ${config.text}`}>{data.aqi}</span>
-        <span className={`mb-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-primary-foreground ${config.color}`}>
-          {config.label}
+        <span className="text-4xl font-bold" style={{ color: data.color_code }}>{data.aqi}</span>
+        <span
+          className="mb-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-primary-foreground"
+          style={{ backgroundColor: data.color_code }}
+        >
+          {data.status}
         </span>
       </div>
 
       {/* Gauge */}
       <div className="space-y-1">
         <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
-          <div
-            className={`h-full rounded-full transition-all duration-700 ${config.color}`}
-            style={{ width: `${gaugeWidth}%` }}
+          <motion.div
+            className="h-full rounded-full"
+            style={{ backgroundColor: data.color_code }}
+            initial={{ width: 0 }}
+            animate={{ width: `${gaugeWidth}%` }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
           />
         </div>
         <div className="flex justify-between text-[10px] text-muted-foreground">
@@ -43,23 +47,23 @@ const AirQualityCard = ({ data }: AirQualityCardProps) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-lg bg-secondary p-3">
-          <p className="text-xs text-muted-foreground">PM2.5</p>
-          <p className="text-lg font-bold text-foreground">{data.pm25} <span className="text-xs font-normal text-muted-foreground">µg/m³</span></p>
-        </div>
-        <div className="rounded-lg bg-secondary p-3">
-          <p className="text-xs text-muted-foreground">NO₂</p>
-          <p className="text-lg font-bold text-foreground">{data.no2} <span className="text-xs font-normal text-muted-foreground">µg/m³</span></p>
-        </div>
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: "PM2.5", value: data.pollutants.pm25, unit: "µg/m³" },
+          { label: "NO₂", value: data.pollutants.no2, unit: "µg/m³" },
+          { label: "O₃", value: data.pollutants.o3, unit: "µg/m³" },
+        ].map((p) => (
+          <div key={p.label} className="rounded-lg bg-secondary p-3">
+            <p className="text-xs text-muted-foreground">{p.label}</p>
+            <p className="text-lg font-bold text-foreground">{p.value} <span className="text-xs font-normal text-muted-foreground">{p.unit}</span></p>
+          </div>
+        ))}
       </div>
 
       <div className="rounded-lg border border-border bg-muted p-3">
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          💡 {data.recommendation}
-        </p>
+        <p className="text-xs leading-relaxed text-muted-foreground">💡 {data.recommendation}</p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

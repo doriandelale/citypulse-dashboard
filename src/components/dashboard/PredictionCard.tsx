@@ -1,19 +1,27 @@
-import { Brain } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import type { PredictionData } from "@/data/mockData";
+import { motion } from "framer-motion";
+import { Brain, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import type { PredictionApiResponse } from "@/services/api";
 
 interface PredictionCardProps {
-  data: PredictionData;
+  data: PredictionApiResponse;
 }
 
+const trendIcons: Record<string, React.ReactNode> = {
+  up: <TrendingUp className="h-4 w-4 text-score-poor" />,
+  down: <TrendingDown className="h-4 w-4 text-score-good" />,
+  stable: <Minus className="h-4 w-4 text-score-moderate" />,
+};
+
 const PredictionCard = ({ data }: PredictionCardProps) => {
-  const chartData = data.predictions.map((p) => ({
-    ...p,
-    fill: p.confidence >= 80 ? "hsl(152, 69%, 45%)" : p.confidence >= 60 ? "hsl(38, 92%, 50%)" : "hsl(0, 84%, 60%)",
-  }));
+  const confidencePct = Math.round(data.confidence_score * 100);
 
   return (
-    <div className="dashboard-card space-y-4">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.25 }}
+      className="dashboard-card space-y-4"
+    >
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Prédiction IA
@@ -21,38 +29,47 @@ const PredictionCard = ({ data }: PredictionCardProps) => {
         <Brain className="h-5 w-5 text-primary" />
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        {data.type === "air_quality" ? "Qualité de l'air prédite" : "Température prédite"} — 6 prochaines heures
-      </p>
+      <div className="space-y-3">
+        <div className="rounded-lg bg-secondary p-4">
+          <p className="text-xs text-muted-foreground">Cible de prédiction</p>
+          <p className="text-sm font-semibold text-foreground">{data.prediction_target}</p>
+        </div>
 
-      <div className="h-44">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 90%)" vertical={false} />
-            <XAxis dataKey="hour" tick={{ fontSize: 11 }} stroke="hsl(220, 10%, 46%)" tickLine={false} axisLine={false} />
-            <YAxis tick={{ fontSize: 11 }} stroke="hsl(220, 10%, 46%)" tickLine={false} axisLine={false} />
-            <Tooltip
-              contentStyle={{ backgroundColor: "hsl(0, 0%, 100%)", border: "1px solid hsl(220, 13%, 90%)", borderRadius: "8px", fontSize: "12px" }}
-              formatter={(value: number, name: string) => {
-                if (name === "value") return [`AQI ${value}`, "Valeur"];
-                return [`${value}%`, "Confiance"];
-              }}
-            />
-            <Bar dataKey="value" radius={[4, 4, 0, 0]} fill="hsl(217, 91%, 60%)" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2">
-        {data.predictions.slice(0, 3).map((p) => (
-          <div key={p.hour} className="rounded-lg bg-secondary p-2 text-center">
-            <p className="text-[10px] text-muted-foreground">{p.hour}</p>
-            <p className="text-sm font-bold text-foreground">{p.value}</p>
-            <p className="text-[10px] text-muted-foreground">±{100 - p.confidence}%</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-lg bg-secondary p-4">
+            <p className="text-xs text-muted-foreground">Valeur dans 6h</p>
+            <p className="text-2xl font-bold text-foreground">{data.value_in_6h}</p>
           </div>
-        ))}
+          <div className="rounded-lg bg-secondary p-4">
+            <p className="text-xs text-muted-foreground">Tendance</p>
+            <div className="mt-1 flex items-center gap-2">
+              {trendIcons[data.trend] || trendIcons.stable}
+              <span className="text-sm font-semibold capitalize text-foreground">{data.trend}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Confidence bar */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">Confiance du modèle</span>
+            <span className="font-semibold text-foreground">{confidencePct}%</span>
+          </div>
+          <div className="h-2.5 w-full overflow-hidden rounded-full bg-secondary">
+            <motion.div
+              className="h-full rounded-full bg-primary"
+              initial={{ width: 0 }}
+              animate={{ width: `${confidencePct}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+            />
+          </div>
+        </div>
+
+        <p className="text-[10px] text-muted-foreground">
+          Modèle : {data.model_info}
+        </p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
