@@ -1,5 +1,8 @@
 import { MapPin } from "lucide-react";
-import { cities, type CityData } from "@/data/mockData";
+
+const availableCities = [
+  { id: "paris", name: "Paris", country: "France" },
+];
 
 interface CitySelectorProps {
   selectedCity: string;
@@ -7,8 +10,6 @@ interface CitySelectorProps {
 }
 
 const CitySelector = ({ selectedCity, onCityChange }: CitySelectorProps) => {
-  const city = cities.find((c) => c.id === selectedCity);
-
   return (
     <div className="relative flex items-center gap-2">
       <MapPin className="h-4 w-4 text-primary" />
@@ -17,7 +18,7 @@ const CitySelector = ({ selectedCity, onCityChange }: CitySelectorProps) => {
         onChange={(e) => onCityChange(e.target.value)}
         className="appearance-none rounded-lg border border-border bg-card px-3 py-1.5 pr-8 text-sm font-medium text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       >
-        {cities.map((c) => (
+        {availableCities.map((c) => (
           <option key={c.id} value={c.id}>
             {c.name}, {c.country}
           </option>
