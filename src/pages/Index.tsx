@@ -11,7 +11,7 @@ import { useFetch } from "@/hooks/useFetch";
 import { getWeather, getAirQuality, getEvents, getPrediction, getUrbanScore } from "@/services/api";
 
 const Index = () => {
-  const [selectedCity, setSelectedCity] = useState("paris");
+  const [selectedCity, setSelectedCity] = useState("Paris");
 
   const score = useFetch(() => getUrbanScore(selectedCity), [selectedCity]);
   const weather = useFetch(() => getWeather(selectedCity), [selectedCity]);

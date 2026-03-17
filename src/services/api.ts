@@ -13,21 +13,20 @@ export interface WeatherApiResponse {
   humidity: number;
   wind_speed: number;
   description: string;
-  icon_code: string;
-  forecast_24h: { time: string; temp: number }[];
+  icon: string;
+  icon_url: string;
 }
 
 export interface AirQualityApiResponse {
   city: string;
   aqi: number;
-  status: string;
-  color_code: string;
-  pollutants: {
-    pm25: number;
-    no2: number;
-    o3: number;
-  };
-  recommendation: string;
+  label: string;
+  color: string;
+  advice: string;
+  pm25: number;
+  no2: number;
+  o3: number;
+  co: number;
 }
 
 export interface EventApiResponse {
