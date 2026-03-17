@@ -46,14 +46,18 @@ export interface AirQualityApiResponse {
 
 export interface EventItem {
   title: string;
-  description: string;
-  date_start: string;
-  date_end: string;
-  location_name: string;
-  location_address: string;
+  description?: string;
+  date_start?: string;
+  date_end?: string;
+  date?: string;
+  location_name?: string;
+  location_address?: string;
+  location?: string;
+  city?: string;
   category: string;
-  image: string | null;
-  link: string;
+  image?: string | null;
+  link?: string;
+  url?: string;
 }
 
 export interface EventsApiResponse {
