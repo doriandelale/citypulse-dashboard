@@ -15,8 +15,15 @@ import { getWeather, getForecast, getAirQuality, getEvents, getUrbanScore } from
 const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 const Index = () => {
-  const [selectedCity, setSelectedCity] = useState("Paris");
+  const [selectedCity, setSelectedCity] = useState(
+      localStorage.getItem("selectedCity") || "Paris"
+  );
   const [lastUpdate, setLastUpdate] = useState(new Date());
+
+// Sauvegarde la ville sélectionnée
+  useEffect(() => {
+    localStorage.setItem("selectedCity", selectedCity);
+  }, [selectedCity]);
 
   const score = useFetch(() => getUrbanScore(selectedCity), [selectedCity]);
   const weather = useFetch(() => getWeather(selectedCity), [selectedCity]);
