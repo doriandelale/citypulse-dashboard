@@ -25,10 +25,18 @@ const getScoreRing = (score: number) => {
   return "hsl(0, 84%, 60%)";
 };
 
+const getScoreLabel = (score: number) => {
+  if (score >= 80) return "Excellent";
+  if (score >= 60) return "Bon";
+  if (score >= 50) return "Correct";
+  return "Mauvais";
+};
+
 const UrbanScore = ({ data }: UrbanScoreProps) => {
   const [showTooltip, setShowTooltip] = useState(false);
+  const score = Math.round(data.score);
   const circumference = 2 * Math.PI * 54;
-  const strokeDashoffset = circumference - (data.global_score / 100) * circumference;
+  const strokeDashoffset = circumference - (score / 100) * circumference;
 
   return (
     <motion.div
@@ -60,9 +68,9 @@ const UrbanScore = ({ data }: UrbanScoreProps) => {
           <p className="mb-2 text-xs font-semibold text-popover-foreground">Détails du score :</p>
           <div className="space-y-1.5">
             {[
-              { label: "Environnement", value: data.details.environment },
-              { label: "Activité", value: data.details.activity },
-              { label: "Sécurité", value: data.details.safety },
+              { label: `Météo (${data.ponderation.weather})`, value: data.details.weather_score },
+              { label: `Air (${data.ponderation.air})`, value: data.details.air_score },
+              { label: `Événements (${data.ponderation.events})`, value: data.details.events_score },
             ].map((c) => (
               <div key={c.label} className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">{c.label}</span>
@@ -78,7 +86,7 @@ const UrbanScore = ({ data }: UrbanScoreProps) => {
           <circle cx="60" cy="60" r="54" fill="none" stroke="hsl(var(--border))" strokeWidth="8" />
           <motion.circle
             cx="60" cy="60" r="54" fill="none"
-            stroke={getScoreRing(data.global_score)}
+            stroke={getScoreRing(score)}
             strokeWidth="8"
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -90,25 +98,21 @@ const UrbanScore = ({ data }: UrbanScoreProps) => {
         </svg>
         <div className="absolute flex flex-col items-center">
           <motion.span
-            className={`text-4xl font-bold ${getScoreColor(data.global_score)}`}
+            className={`text-4xl font-bold ${getScoreColor(score)}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
           >
-            {data.global_score}
+            {score}
           </motion.span>
           <span className="text-xs text-muted-foreground">/100</span>
         </div>
       </div>
 
-      <div className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${getScoreBg(data.global_score)} text-primary-foreground`}>
+      <div className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${getScoreBg(score)} text-primary-foreground`}>
         <span className="h-1.5 w-1.5 animate-pulse-glow rounded-full bg-primary-foreground" />
-        {data.rating}
+        {getScoreLabel(score)}
       </div>
-
-      <p className="text-[10px] text-muted-foreground">
-        Mis à jour : {new Date(data.last_updated).toLocaleString("fr-FR")}
-      </p>
     </motion.div>
   );
 };
