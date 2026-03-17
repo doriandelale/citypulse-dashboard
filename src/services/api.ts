@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8000";
+const API_BASE = "https://citypulse-pulseboard.onrender.com";
 
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
