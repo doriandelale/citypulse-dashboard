@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 
+// ✅ IMPORTANT
+import "leaflet/dist/leaflet.css";
+
 interface MapSectionProps {
   city: string;
   aqi: number;
@@ -46,6 +49,7 @@ const MapSection = ({ city, aqi }: MapSectionProps) => {
     L.control.zoom({ position: "bottomright" }).addTo(map);
 
     const markerColor = aqi <= 2 ? "#22c55e" : aqi <= 3 ? "#f59e0b" : "#ef4444";
+
     const icon = L.divIcon({
       className: "custom-marker",
       html: `<div style="width:20px;height:20px;border-radius:50%;background:${markerColor};border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div>`,
@@ -53,24 +57,34 @@ const MapSection = ({ city, aqi }: MapSectionProps) => {
       iconAnchor: [10, 10],
     });
 
-    L.marker(coords, { icon }).addTo(map)
-      .bindPopup(`<strong>${city}</strong><br/>AQI: ${aqi}`);
+    L.marker(coords, { icon })
+        .addTo(map)
+        .bindPopup(`<strong>${city}</strong><br/>AQI: ${aqi}`);
 
     mapInstanceRef.current = map;
+
+    // ✅ FIX PRINCIPAL
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 300);
 
     return () => {
       map.remove();
       mapInstanceRef.current = null;
     };
-  }, [city, aqi, coords]);
+  }, [city, aqi]);
 
   return (
-    <div className="dashboard-card overflow-hidden p-0">
-      <div className="p-4 pb-2">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Carte — {city}</h3>
+      <div className="dashboard-card overflow-hidden p-0">
+        <div className="p-4 pb-2">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Carte — {city}
+          </h3>
+        </div>
+
+        {/* ✅ IMPORTANT */}
+        <div ref={mapRef} className="h-64 w-full md:h-80 leaflet-container-fix" />
       </div>
-      <div ref={mapRef} className="h-64 w-full md:h-80" />
-    </div>
   );
 };
 
