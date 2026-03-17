@@ -1,7 +1,7 @@
 import { MapPin } from "lucide-react";
 
 const availableCities = [
-  { id: "paris", name: "Paris", country: "France" },
+  { id: "Paris", name: "Paris", country: "France" },
 ];
 
 interface CitySelectorProps {
