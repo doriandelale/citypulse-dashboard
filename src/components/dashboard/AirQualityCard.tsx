@@ -6,30 +6,35 @@ interface AirQualityCardProps {
   data: AirQualityApiResponse;
 }
 
-const colorMap: Record<string, string> = {
-  green: "hsl(152, 69%, 45%)",
-  yellow: "hsl(38, 92%, 50%)",
-  orange: "hsl(24, 95%, 53%)",
-  red: "hsl(0, 84%, 60%)",
-  purple: "hsl(270, 50%, 60%)",
-  maroon: "hsl(0, 60%, 25%)",
+const getAqiColor = (aqi: number) => {
+  if (aqi <= 1) return "hsl(152, 69%, 45%)";
+  if (aqi <= 2) return "hsl(38, 92%, 50%)";
+  if (aqi <= 3) return "hsl(24, 95%, 53%)";
+  if (aqi <= 4) return "hsl(0, 84%, 60%)";
+  return "hsl(270, 50%, 60%)";
 };
 
-const healthMessages: Record<string, { icon: typeof Shield; message: string; severity: string }> = {
-  green: { icon: Shield, message: "Excellent pour les activités extérieures 🌿", severity: "success" },
-  yellow: { icon: Activity, message: "Acceptable — personnes sensibles prudence ⚠️", severity: "warning" },
-  orange: { icon: AlertTriangle, message: "Limitez les efforts prolongés en extérieur", severity: "warning" },
-  red: { icon: AlertTriangle, message: "Évitez le sport intensif en extérieur ⛔", severity: "danger" },
-  purple: { icon: AlertTriangle, message: "Restez à l'intérieur si possible 🚨", severity: "danger" },
-  maroon: { icon: AlertTriangle, message: "Danger — restez à l'intérieur 🚨", severity: "danger" },
+const getHealthMessage = (aqi: number) => {
+  if (aqi <= 1) return { icon: Shield, message: "Excellent pour les activités extérieures 🌿" };
+  if (aqi <= 2) return { icon: Activity, message: "Acceptable — personnes sensibles prudence ⚠️" };
+  if (aqi <= 3) return { icon: AlertTriangle, message: "Limitez les efforts prolongés en extérieur" };
+  if (aqi <= 4) return { icon: AlertTriangle, message: "Évitez le sport intensif en extérieur ⛔" };
+  return { icon: AlertTriangle, message: "Danger — restez à l'intérieur 🚨" };
 };
 
 const AirQualityCard = ({ data }: AirQualityCardProps) => {
-  const displayColor = colorMap[data.color] || "hsl(var(--primary))";
+  const displayColor = getAqiColor(data.aqi);
   const gaugeWidth = Math.min((data.aqi / 5) * 100, 100);
-  const health = healthMessages[data.color] || healthMessages.yellow;
+  const health = getHealthMessage(data.aqi);
   const HealthIcon = health.icon;
   const isBad = data.aqi >= 4;
+
+  const pollutants = [
+    { label: "PM2.5", value: data.pollutants?.pm25 },
+    { label: "NO₂", value: data.pollutants?.no2 },
+    { label: "O₃", value: data.pollutants?.o3 },
+    ...(data.pollutants?.co != null ? [{ label: "CO", value: data.pollutants.co }] : []),
+  ];
 
   return (
     <motion.div
@@ -38,7 +43,6 @@ const AirQualityCard = ({ data }: AirQualityCardProps) => {
       transition={{ duration: 0.4, delay: 0.15 }}
       className="dashboard-card space-y-4"
     >
-      {/* Alert banner for bad AQI */}
       <AnimatePresence>
         {isBad && (
           <motion.div
@@ -64,11 +68,10 @@ const AirQualityCard = ({ data }: AirQualityCardProps) => {
           className="mb-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-primary-foreground"
           style={{ backgroundColor: displayColor }}
         >
-          {data.label}
+          {data.status}
         </span>
       </div>
 
-      {/* Gauge */}
       <div className="space-y-1">
         <div className="h-2.5 w-full overflow-hidden rounded-full bg-secondary">
           <motion.div
@@ -84,29 +87,19 @@ const AirQualityCard = ({ data }: AirQualityCardProps) => {
         </div>
       </div>
 
-      {/* Health message */}
       <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 p-3">
         <HealthIcon className="h-4 w-4 flex-shrink-0" style={{ color: displayColor }} />
         <p className="text-xs font-medium text-foreground">{health.message}</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-2">
-        {[
-          { label: "PM2.5", value: data.pm25, unit: "µg/m³" },
-          { label: "NO₂", value: data.no2, unit: "µg/m³" },
-          { label: "O₃", value: data.o3, unit: "µg/m³" },
-          { label: "CO", value: data.co, unit: "µg/m³" },
-        ].map((p) => (
+      <div className={`grid gap-2 ${pollutants.length === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
+        {pollutants.map((p) => (
           <div key={p.label} className="rounded-lg bg-secondary/70 p-2.5 text-center">
             <p className="text-[10px] text-muted-foreground">{p.label}</p>
-            <p className="text-sm font-bold text-foreground">{Math.round(p.value * 10) / 10}</p>
-            <p className="text-[9px] text-muted-foreground">{p.unit}</p>
+            <p className="text-sm font-bold text-foreground">{p.value != null ? Math.round(p.value * 10) / 10 : "—"}</p>
+            <p className="text-[9px] text-muted-foreground">µg/m³</p>
           </div>
         ))}
-      </div>
-
-      <div className="rounded-lg border border-border bg-muted/30 p-3">
-        <p className="text-xs leading-relaxed text-muted-foreground">💡 {data.advice}</p>
       </div>
     </motion.div>
   );

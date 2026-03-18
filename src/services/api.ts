@@ -14,7 +14,7 @@ export interface WeatherApiResponse {
   wind_speed: number;
   description: string;
   icon: string;
-  icon_url: string;
+  icon_url?: string;
 }
 
 export interface ForecastEntry {
@@ -35,38 +35,39 @@ export interface ForecastApiResponse {
 export interface AirQualityApiResponse {
   city: string;
   aqi: number;
-  label: string;
-  color: string;
-  advice: string;
-  pm25: number;
-  no2: number;
-  o3: number;
-  co: number;
+  status: string;
+  color_code: string;
+  pollutants: {
+    pm25: number;
+    no2: number;
+    o3: number;
+    co?: number;
+  };
+  measured_at?: string;
+  source?: string;
 }
 
 export interface EventItem {
+  id?: number;
   title: string;
-  description?: string;
+  description?: string | null;
+  date?: string;
+  time?: string;
   date_start?: string;
   date_end?: string;
-  date?: string;
+  location?: string;
   location_name?: string;
   location_address?: string;
-  location?: string;
   city?: string;
   category: string;
   image?: string | null;
   link?: string;
   url?: string;
+  source?: string;
 }
 
-export interface EventsApiResponse {
-  city: string;
-  count: number;
-  source: string;
-  agenda_uid: string;
-  events: EventItem[];
-}
+// Events API returns a plain array
+export type EventsApiResponse = EventItem[];
 
 export interface ScoreDetails {
   weather_score: number;
@@ -74,17 +75,11 @@ export interface ScoreDetails {
   events_score: number;
 }
 
-export interface ScorePonderation {
-  weather: string;
-  air: string;
-  events: string;
-}
-
 export interface UrbanScoreApiResponse {
   city: string;
   score: number;
   details: ScoreDetails;
-  ponderation: ScorePonderation;
+  source?: string;
 }
 
 export const getWeather = (city: string) =>

@@ -8,13 +8,12 @@ interface EventsListProps {
 }
 
 const categoryColors: Record<string, string> = {
+  "événement": "bg-primary/15 text-primary",
   conférence: "bg-primary/15 text-primary",
   visite: "bg-success/15 text-success",
   concert: "bg-warning/15 text-warning",
   spectacle: "bg-destructive/15 text-destructive",
   exposition: "bg-accent/15 text-accent-foreground",
-  cinéma: "bg-primary/15 text-primary",
-  ":cinema": "bg-primary/15 text-primary",
 };
 
 const getCategoryStyle = (cat: string) => {
@@ -22,10 +21,15 @@ const getCategoryStyle = (cat: string) => {
   return categoryColors[key] || "bg-secondary text-secondary-foreground";
 };
 
-const formatDate = (dateStr: string) => {
+const formatDate = (dateStr: string, timeStr?: string) => {
   try {
     const d = new Date(dateStr);
-    return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    const opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" };
+    let result = d.toLocaleDateString("fr-FR", opts);
+    if (timeStr) {
+      result += ` ${timeStr.slice(0, 5)}`;
+    }
+    return result;
   } catch {
     return dateStr;
   }
@@ -33,7 +37,8 @@ const formatDate = (dateStr: string) => {
 
 const EventsList = ({ data }: EventsListProps) => {
   const [showAll, setShowAll] = useState(false);
-  const visibleEvents = showAll ? data.events : data.events.slice(0, 4);
+  const events = data;
+  const visibleEvents = showAll ? events : events.slice(0, 4);
 
   return (
     <motion.div
@@ -47,24 +52,21 @@ const EventsList = ({ data }: EventsListProps) => {
           Événements à venir
         </h3>
         <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-          {data.count} événement{data.count !== 1 ? "s" : ""}
+          {events.length} événement{events.length !== 1 ? "s" : ""}
         </span>
       </div>
 
-      {data.events.length === 0 ? (
+      {events.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-10">
           <Calendar className="h-10 w-10 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">Aucun événement à venir pour {data.city}</p>
+          <p className="text-sm text-muted-foreground">Aucun événement à venir</p>
         </div>
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2">
             {visibleEvents.map((event, i) => (
-              <motion.a
+              <motion.div
                 key={`${event.title}-${i}`}
-                href={event.url || event.link || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05 * i }}
@@ -74,7 +76,11 @@ const EventsList = ({ data }: EventsListProps) => {
                   <p className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
                     {event.title}
                   </p>
-                  <ExternalLink className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                  {(event.url || event.link) && (
+                    <a href={event.url || event.link} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                    </a>
+                  )}
                 </div>
 
                 {event.description && (
@@ -91,10 +97,12 @@ const EventsList = ({ data }: EventsListProps) => {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    {formatDate(event.date || event.date_start)}
-                  </span>
+                  {(event.date || event.date_start) && (
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {formatDate(event.date || event.date_start!, event.time)}
+                    </span>
+                  )}
                   {(event.location || event.location_name) && (
                     <span className="flex items-center gap-1">
                       <MapPin className="h-3 w-3" />
@@ -102,16 +110,16 @@ const EventsList = ({ data }: EventsListProps) => {
                     </span>
                   )}
                 </div>
-              </motion.a>
+              </motion.div>
             ))}
           </div>
 
-          {data.events.length > 4 && (
+          {events.length > 4 && (
             <button
               onClick={() => setShowAll(!showAll)}
               className="mx-auto flex items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
             >
-              {showAll ? "Voir moins" : `Voir les ${data.events.length} événements`}
+              {showAll ? "Voir moins" : `Voir les ${events.length} événements`}
               <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showAll ? "rotate-180" : ""}`} />
             </button>
           )}
