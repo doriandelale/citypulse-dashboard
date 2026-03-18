@@ -12,7 +12,7 @@ import { CardLoader, CardError } from "@/components/dashboard/CardStates";
 import { useFetch } from "@/hooks/useFetch";
 import { getWeather, getForecast, getAirQuality, getEvents, getUrbanScore } from "@/services/api";
 
-const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const REFRESH_INTERVAL = 5 * 60 * 1000;
 
 const Index = () => {
   const [selectedCity, setSelectedCity] = useState(
@@ -20,7 +20,6 @@ const Index = () => {
   );
   const [lastUpdate, setLastUpdate] = useState(new Date());
 
-// Sauvegarde la ville sélectionnée
   useEffect(() => {
     localStorage.setItem("selectedCity", selectedCity);
   }, [selectedCity]);
@@ -40,7 +39,6 @@ const Index = () => {
     setLastUpdate(new Date());
   }, [score, weather, forecast, air, events]);
 
-  // Auto-refresh every 5 minutes
   useEffect(() => {
     const interval = setInterval(refreshAll, REFRESH_INTERVAL);
     return () => clearInterval(interval);
@@ -84,12 +82,12 @@ const Index = () => {
         </div>
 
         <div className="grid gap-5 md:grid-cols-2">
-          {/* Score Urbain - full width */}
+          {/* Score Urbain */}
           <div className="md:col-span-2">
             {score.loading ? <CardLoader /> : score.error ? <CardError message={score.error} onRetry={score.refetch} /> : score.data && <UrbanScore data={score.data} />}
           </div>
 
-          {/* Weather - full width hero */}
+          {/* Weather */}
           <div className="md:col-span-2">
             {weather.loading ? <CardLoader /> : weather.error ? <CardError message={weather.error} onRetry={weather.refetch} /> : weather.data && <WeatherCard data={weather.data} forecast={forecast.data} city={selectedCity} />}
           </div>

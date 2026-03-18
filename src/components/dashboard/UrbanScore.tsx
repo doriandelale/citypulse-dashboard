@@ -40,9 +40,9 @@ const getScoreDescription = (score: number) => {
 };
 
 const criteriaConfig = [
-  { key: "weather_score" as const, label: "Météo", icon: Cloud, desc: "Température, ciel, vent" },
-  { key: "air_score" as const, label: "Qualité de l'air", icon: WindIcon, desc: "AQI et polluants" },
-  { key: "events_score" as const, label: "Événements", icon: Calendar, desc: "Activités disponibles" },
+  { key: "weather_score" as const, label: "Météo", icon: Cloud, desc: "Température, ciel, vent", weight: "40%" },
+  { key: "air_score" as const, label: "Qualité de l'air", icon: WindIcon, desc: "AQI et polluants", weight: "35%" },
+  { key: "events_score" as const, label: "Événements", icon: Calendar, desc: "Activités disponibles", weight: "25%" },
 ];
 
 const UrbanScore = ({ data }: UrbanScoreProps) => {
@@ -83,8 +83,8 @@ const UrbanScore = ({ data }: UrbanScoreProps) => {
               <p className="text-xs font-semibold text-foreground">📊 Qu'est-ce que le Score Urbain ?</p>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Le score urbain évalue en temps réel la qualité de vie dans votre ville sur une échelle de 0 à 100.
-                Il combine trois critères pondérés : la météo ({data.ponderation.weather}), la qualité de l'air ({data.ponderation.air}),
-                et les événements culturels ({data.ponderation.events}).
+                Il combine trois critères pondérés : la météo (40%), la qualité de l'air (35%),
+                et les événements culturels (25%).
               </p>
               <p className="text-xs text-muted-foreground">Plus le score est élevé, meilleures sont les conditions pour profiter de la ville !</p>
             </div>
@@ -135,17 +135,16 @@ const UrbanScore = ({ data }: UrbanScoreProps) => {
           {/* Criteria breakdown */}
           <div className="space-y-2.5">
             {criteriaConfig.map((c) => {
-              const value = data.details[c.key];
-              const pond = data.ponderation[c.key.replace("_score", "") as keyof typeof data.ponderation];
+              const value = data.details?.[c.key] ?? 0;
               return (
                 <div key={c.key} className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
                     <span className="flex items-center gap-1.5 text-muted-foreground">
                       <c.icon className="h-3 w-3" />
                       {c.label}
-                      <span className="text-[10px] opacity-60">({pond})</span>
+                      <span className="text-[10px] opacity-60">({c.weight})</span>
                     </span>
-                    <span className={`font-semibold ${getScoreColor(value)}`}>{value}/100</span>
+                    <span className={`font-semibold ${getScoreColor(value)}`}>{Math.round(value)}/100</span>
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
                     <motion.div
