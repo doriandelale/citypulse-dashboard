@@ -1,14 +1,17 @@
 import { MapPin, Plus, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const defaultCities = [
-  { id: "Paris", name: "Paris" },
-  { id: "Lyon", name: "Lyon" },
-  { id: "Marseille", name: "Marseille" },
-  { id: "Toulouse", name: "Toulouse" },
-  { id: "Nice", name: "Nice" },
-  { id: "Bordeaux", name: "Bordeaux" },
-];
+const DEFAULT_CITIES = ["Paris", "Lyon", "Marseille", "Toulouse", "Nice", "Bordeaux"];
+const STORAGE_KEY = "customCities";
+
+const loadCustomCities = (): string[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
 
 interface CitySelectorProps {
   selectedCity: string;
@@ -18,15 +21,24 @@ interface CitySelectorProps {
 const CitySelector = ({ selectedCity, onCityChange }: CitySelectorProps) => {
   const [customCity, setCustomCity] = useState("");
   const [showInput, setShowInput] = useState(false);
+  const [customCities, setCustomCities] = useState<string[]>(loadCustomCities);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(customCities));
+  }, [customCities]);
+
+  const allCities = [...DEFAULT_CITIES, ...customCities];
 
   const handleAddCity = () => {
     const trimmed = customCity.trim();
-    if (trimmed) {
-      const capitalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
-      onCityChange(capitalized);
-      setCustomCity("");
-      setShowInput(false);
+    if (!trimmed) return;
+    const capitalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+    if (!allCities.includes(capitalized)) {
+      setCustomCities((prev) => [...prev, capitalized]);
     }
+    onCityChange(capitalized);
+    setCustomCity("");
+    setShowInput(false);
   };
 
   return (
@@ -44,12 +56,9 @@ const CitySelector = ({ selectedCity, onCityChange }: CitySelectorProps) => {
           }}
           className="appearance-none rounded-lg border border-border bg-card px-3 py-1.5 pr-8 text-sm font-medium text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          {defaultCities.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
+          {allCities.map((c) => (
+            <option key={c} value={c}>{c}</option>
           ))}
-          {!defaultCities.find((c) => c.id === selectedCity) && (
-            <option value={selectedCity}>{selectedCity}</option>
-          )}
           <option value="__custom__">+ Autre ville…</option>
         </select>
         <svg className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
