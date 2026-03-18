@@ -1,4 +1,5 @@
 const API_BASE = "https://citypulse-pulseboard.onrender.com";
+const ML_API_BASE = "https://citypulse-pulseboard-bqkl.onrender.com";
 
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
@@ -87,6 +88,20 @@ export interface UrbanScoreApiResponse {
   ponderation: ScorePonderation;
 }
 
+// ── Prédictions ML (endpoint DAN) ──
+export interface PredictionEntry {
+  hour: number;
+  datetime: string;
+  predicted_temperature: number;
+}
+
+export interface PredictionApiResponse {
+  city: string;
+  predictions: PredictionEntry[];
+  confidence: number;
+  model_mae: number;
+}
+
 export const getWeather = (city: string) =>
   fetchJson<WeatherApiResponse>(`${API_BASE}/api/weather/${city}`);
 
@@ -101,3 +116,6 @@ export const getEvents = (city: string) =>
 
 export const getUrbanScore = (city: string) =>
   fetchJson<UrbanScoreApiResponse>(`${API_BASE}/api/score/${city}`);
+
+export const getPredictions = (city: string, hours: number = 6) =>
+  fetchJson<PredictionApiResponse>(`${ML_API_BASE}/api/predict/${city}?hours=${hours}`);
