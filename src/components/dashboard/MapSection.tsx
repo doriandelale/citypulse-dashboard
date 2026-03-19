@@ -64,6 +64,16 @@ const MapSection = ({ city, aqi, events }: MapSectionProps) => {
 
     L.control.zoom({ position: "bottomright" }).addTo(map);
 
+    // Green city area overlay
+    L.circle(coords, {
+      radius: 1800,
+      color: "#22c55e",
+      weight: 2,
+      opacity: 0.4,
+      fillColor: "#22c55e",
+      fillOpacity: 0.12,
+    }).addTo(map);
+
     // City center marker (AQI)
     const markerColor = aqi <= 2 ? "#22c55e" : aqi <= 3 ? "#f59e0b" : "#ef4444";
     const cityIcon = L.divIcon({
