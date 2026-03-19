@@ -81,9 +81,9 @@ const MapSection = ({ city, aqi, events }: MapSectionProps) => {
     if (safeEvents.length > 0) {
       const eventGroup = L.layerGroup().addTo(map);
 
-      events.forEach((event, i) => {
+      safeEvents.forEach((event, i) => {
         // Spread events in a circle around city center
-        const angle = (2 * Math.PI * i) / Math.max(events.length, 1);
+        const angle = (2 * Math.PI * i) / Math.max(safeEvents.length, 1);
         const radius = 0.008 + Math.random() * 0.012;
         const lat = coords[0] + Math.cos(angle) * radius;
         const lng = coords[1] + Math.sin(angle) * radius;
