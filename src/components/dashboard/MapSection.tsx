@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
+import { Maximize2, Minimize2, Layers } from "lucide-react";
 import type { EventItem } from "@/services/api";
 
 import "leaflet/dist/leaflet.css";
@@ -24,26 +25,39 @@ const cityCoords: Record<string, [number, number]> = {
   Monaco: [43.7384, 7.4246],
 };
 
-const categoryIcons: Record<string, { emoji: string; color: string }> = {
-  concert: { emoji: "🎵", color: "#f59e0b" },
-  spectacle: { emoji: "🎭", color: "#ef4444" },
-  exposition: { emoji: "🎨", color: "#8b5cf6" },
-  conférence: { emoji: "🎤", color: "#3b82f6" },
-  visite: { emoji: "🏛️", color: "#22c55e" },
-  "événement": { emoji: "⭐", color: "#ec4899" },
+const categoryIcons: Record<string, { emoji: string; color: string; label: string }> = {
+  concert: { emoji: "🎵", color: "#f59e0b", label: "Concerts" },
+  spectacle: { emoji: "🎭", color: "#ef4444", label: "Spectacles" },
+  exposition: { emoji: "🎨", color: "#8b5cf6", label: "Expositions" },
+  conférence: { emoji: "🎤", color: "#3b82f6", label: "Conférences" },
+  visite: { emoji: "🏛️", color: "#22c55e", label: "Visites" },
+  "événement": { emoji: "⭐", color: "#ec4899", label: "Événements" },
 };
 
 const getCategoryIcon = (cat: string) => {
   const key = cat.toLowerCase().replace(/^:/, "");
-  return categoryIcons[key] || { emoji: "📍", color: "#6b7280" };
+  return categoryIcons[key] || { emoji: "📍", color: "#6b7280", label: "Autre" };
+};
+
+const aqiLabels: Record<number, { label: string; color: string }> = {
+  1: { label: "Excellent", color: "#22c55e" },
+  2: { label: "Bon", color: "#84cc16" },
+  3: { label: "Modéré", color: "#f59e0b" },
+  4: { label: "Mauvais", color: "#ef4444" },
+  5: { label: "Très mauvais", color: "#dc2626" },
 };
 
 const MapSection = ({ city, aqi, events }: MapSectionProps) => {
   const safeEvents = events ?? [];
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
 
   const coords = cityCoords[city] || [48.8566, 2.3522];
+
+  // Compute active categories from events
+  const activeCategories = [...new Set(safeEvents.map(e => (e.category || "").toLowerCase().replace(/^:/, "")))];
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -84,7 +98,6 @@ const MapSection = ({ city, aqi, events }: MapSectionProps) => {
           }).addTo(map);
         }
       } catch {
-        // Fallback circle if boundary fetch fails
         L.circle(coords, {
           radius: 3000,
           color: "#22c55e",
@@ -97,20 +110,49 @@ const MapSection = ({ city, aqi, events }: MapSectionProps) => {
     };
     fetchBoundary();
 
-    // City center marker (AQI)
+    // City center marker with animated pulse
     const markerColor = aqi <= 2 ? "#22c55e" : aqi <= 3 ? "#f59e0b" : "#ef4444";
+    const aqiInfo = aqiLabels[aqi] || aqiLabels[1];
     const cityIcon = L.divIcon({
       className: "custom-marker",
-      html: `<div style="width:22px;height:22px;border-radius:50%;background:${markerColor};border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.3)"></div>`,
-      iconSize: [22, 22],
-      iconAnchor: [11, 11],
+      html: `
+        <div style="position:relative;width:44px;height:44px;display:flex;align-items:center;justify-content:center;">
+          <div style="
+            position:absolute;inset:0;border-radius:50%;
+            background:${markerColor};opacity:0.25;
+            animation:pulse-ring 2s ease-out infinite;
+          "></div>
+          <div style="
+            position:absolute;inset:6px;border-radius:50%;
+            background:${markerColor};opacity:0.15;
+            animation:pulse-ring 2s ease-out 0.5s infinite;
+          "></div>
+          <div style="
+            position:relative;width:22px;height:22px;border-radius:50%;
+            background:${markerColor};border:3px solid white;
+            box-shadow:0 2px 10px rgba(0,0,0,0.3);
+            display:flex;align-items:center;justify-content:center;
+            font-size:9px;font-weight:bold;color:white;
+          ">${aqi}</div>
+        </div>
+      `,
+      iconSize: [44, 44],
+      iconAnchor: [22, 22],
     });
 
     L.marker(coords, { icon: cityIcon })
       .addTo(map)
-      .bindPopup(`<strong>${city}</strong><br/>AQI: ${aqi}`);
+      .bindPopup(
+        `<div style="text-align:center;min-width:120px;">
+          <strong style="font-size:13px;">${city}</strong>
+          <div style="margin-top:4px;padding:3px 8px;border-radius:12px;background:${aqiInfo.color}22;color:${aqiInfo.color};font-size:11px;font-weight:600;">
+            AQI ${aqi} — ${aqiInfo.label}
+          </div>
+        </div>`,
+        { closeButton: false }
+      );
 
-    // Event markers scattered around city center
+    // Event markers with Google Maps itinerary link in popup
     if (safeEvents.length > 0) {
       const eventGroup = L.layerGroup().addTo(map);
 
@@ -137,22 +179,30 @@ const MapSection = ({ city, aqi, events }: MapSectionProps) => {
         });
 
         const linkHtml = (event.url || event.link)
-          ? `<br/><a href="${event.url || event.link}" target="_blank" rel="noopener" style="color:#3b82f6;font-size:11px;">Voir plus →</a>`
+          ? `<a href="${event.url || event.link}" target="_blank" rel="noopener" style="color:#3b82f6;font-size:11px;text-decoration:none;">Voir plus →</a>`
+          : "";
+
+        const locationStr = event.location_address || event.location || event.location_name || "";
+        const mapsHtml = locationStr
+          ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(locationStr)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:3px;margin-top:4px;padding:2px 8px;border-radius:10px;background:#3b82f620;color:#3b82f6;font-size:10px;font-weight:600;text-decoration:none;">🧭 Itinéraire</a>`
           : "";
 
         const dateStr = event.date || event.date_start || "";
         const dateHtml = dateStr
-          ? `<br/><span style="font-size:10px;color:#888;">${new Date(dateStr).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</span>`
+          ? `<span style="font-size:10px;color:#888;">${new Date(dateStr).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</span>`
           : "";
 
         L.marker([lat, lng], { icon: eventIcon })
           .addTo(eventGroup)
           .bindPopup(
-            `<div style="min-width:140px;">
+            `<div style="min-width:160px;line-height:1.5;">
               <strong style="font-size:12px;">${event.title}</strong>
-              ${dateHtml}
-              ${event.location || event.location_name ? `<br/><span style="font-size:10px;color:#666;">📍 ${event.location || event.location_name}</span>` : ""}
-              ${linkHtml}
+              ${dateHtml ? `<br/>${dateHtml}` : ""}
+              ${locationStr ? `<br/><span style="font-size:10px;color:#666;">📍 ${locationStr}</span>` : ""}
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
+                ${linkHtml}
+                ${mapsHtml}
+              </div>
             </div>`,
             { closeButton: false, className: "event-popup" }
           );
@@ -171,19 +221,82 @@ const MapSection = ({ city, aqi, events }: MapSectionProps) => {
     };
   }, [city, aqi, safeEvents]);
 
+  // Resize map when fullscreen toggles
+  useEffect(() => {
+    setTimeout(() => {
+      mapInstanceRef.current?.invalidateSize();
+    }, 350);
+  }, [isFullscreen]);
+
   return (
-    <div className="dashboard-card overflow-hidden p-0">
+    <div className={`dashboard-card overflow-hidden p-0 transition-all duration-300 ${isFullscreen ? "fixed inset-4 z-[9999] rounded-2xl shadow-2xl" : "relative"}`}>
+      {/* Header */}
       <div className="flex items-center justify-between p-4 pb-2">
         <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Carte — {city}
         </h3>
-        {safeEvents.length > 0 && (
-          <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
-            {safeEvents.length} événement{safeEvents.length !== 1 ? "s" : ""}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {safeEvents.length > 0 && (
+            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
+              {safeEvents.length} événement{safeEvents.length !== 1 ? "s" : ""}
+            </span>
+          )}
+          <button
+            onClick={() => setShowLegend(!showLegend)}
+            className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            title="Légende"
+          >
+            <Layers className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            title={isFullscreen ? "Réduire" : "Plein écran"}
+          >
+            {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+          </button>
+        </div>
       </div>
-      <div ref={mapRef} className="h-64 w-full md:h-80 leaflet-container-fix" />
+
+      {/* Legend overlay */}
+      {showLegend && (
+        <div className="absolute left-3 top-14 z-[1000] rounded-xl border border-border bg-card/95 p-3 shadow-lg backdrop-blur-sm">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Légende</p>
+          {/* AQI */}
+          <div className="mb-2 flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full" style={{ background: aqiLabels[aqi]?.color || "#22c55e" }} />
+            <span className="text-[11px] text-foreground">AQI {aqi} — {aqiLabels[aqi]?.label || "N/A"}</span>
+          </div>
+          <div className="mb-1 h-px bg-border" />
+          {/* Event categories */}
+          {activeCategories.length > 0 ? (
+            activeCategories.map(cat => {
+              const info = categoryIcons[cat] || { emoji: "📍", color: "#6b7280", label: cat };
+              return (
+                <div key={cat} className="flex items-center gap-2 py-0.5">
+                  <div className="flex h-4 w-4 items-center justify-content-center rounded-full text-[10px]" style={{ background: info.color }}>
+                    <span className="mx-auto text-[8px]">{info.emoji}</span>
+                  </div>
+                  <span className="text-[11px] text-foreground">{info.label}</span>
+                </div>
+              );
+            })
+          ) : (
+            <span className="text-[10px] text-muted-foreground">Aucun événement</span>
+          )}
+        </div>
+      )}
+
+      {/* Map */}
+      <div ref={mapRef} className={`w-full leaflet-container-fix transition-all duration-300 ${isFullscreen ? "h-[calc(100%-48px)]" : "h-64 md:h-80"}`} />
+
+      {/* Pulse animation keyframes */}
+      <style>{`
+        @keyframes pulse-ring {
+          0% { transform: scale(0.5); opacity: 0.4; }
+          100% { transform: scale(1.5); opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 };
