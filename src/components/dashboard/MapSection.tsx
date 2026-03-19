@@ -78,7 +78,7 @@ const MapSection = ({ city, aqi, events }: MapSectionProps) => {
       .bindPopup(`<strong>${city}</strong><br/>AQI: ${aqi}`);
 
     // Event markers scattered around city center
-    if (events.length > 0) {
+    if (safeEvents.length > 0) {
       const eventGroup = L.layerGroup().addTo(map);
 
       events.forEach((event, i) => {
