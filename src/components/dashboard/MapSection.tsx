@@ -38,7 +38,8 @@ const getCategoryIcon = (cat: string) => {
   return categoryIcons[key] || { emoji: "📍", color: "#6b7280" };
 };
 
-const MapSection = ({ city, aqi, events = [] }: MapSectionProps) => {
+const MapSection = ({ city, aqi, events }: MapSectionProps) => {
+  const safeEvents = events ?? [];
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
 
