@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Calendar, MapPin, ExternalLink, Tag, ChevronDown } from "lucide-react";
+import { Calendar, MapPin, ExternalLink, Tag, ChevronDown, Navigation } from "lucide-react";
 import { useState } from "react";
 import type { EventsApiResponse } from "@/services/api";
 
