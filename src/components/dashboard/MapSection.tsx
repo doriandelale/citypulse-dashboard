@@ -38,7 +38,8 @@ const getCategoryIcon = (cat: string) => {
   return categoryIcons[key] || { emoji: "📍", color: "#6b7280" };
 };
 
-const MapSection = ({ city, aqi, events = [] }: MapSectionProps) => {
+const MapSection = ({ city, aqi, events }: MapSectionProps) => {
+  const safeEvents = events ?? [];
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
 
@@ -77,12 +78,12 @@ const MapSection = ({ city, aqi, events = [] }: MapSectionProps) => {
       .bindPopup(`<strong>${city}</strong><br/>AQI: ${aqi}`);
 
     // Event markers scattered around city center
-    if (events.length > 0) {
+    if (safeEvents.length > 0) {
       const eventGroup = L.layerGroup().addTo(map);
 
-      events.forEach((event, i) => {
+      safeEvents.forEach((event, i) => {
         // Spread events in a circle around city center
-        const angle = (2 * Math.PI * i) / Math.max(events.length, 1);
+        const angle = (2 * Math.PI * i) / Math.max(safeEvents.length, 1);
         const radius = 0.008 + Math.random() * 0.012;
         const lat = coords[0] + Math.cos(angle) * radius;
         const lng = coords[1] + Math.sin(angle) * radius;
@@ -136,7 +137,7 @@ const MapSection = ({ city, aqi, events = [] }: MapSectionProps) => {
       map.remove();
       mapInstanceRef.current = null;
     };
-  }, [city, aqi, events]);
+  }, [city, aqi, safeEvents]);
 
   return (
     <div className="dashboard-card overflow-hidden p-0">
@@ -144,9 +145,9 @@ const MapSection = ({ city, aqi, events = [] }: MapSectionProps) => {
         <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Carte — {city}
         </h3>
-        {events.length > 0 && (
+        {safeEvents.length > 0 && (
           <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
-            {events.length} événement{events.length !== 1 ? "s" : ""}
+            {safeEvents.length} événement{safeEvents.length !== 1 ? "s" : ""}
           </span>
         )}
       </div>
