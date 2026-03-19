@@ -98,7 +98,7 @@ const Index = () => {
 
           {/* Map */}
           <div className="md:col-span-2">
-            <MapSection city={selectedCity} aqi={air.data?.aqi || 1} />
+            <MapSection city={selectedCity} aqi={air.data?.aqi || 1} events={events.data} />
           </div>
 
           {/* Events */}
