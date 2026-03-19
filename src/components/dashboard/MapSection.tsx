@@ -145,9 +145,9 @@ const MapSection = ({ city, aqi, events }: MapSectionProps) => {
         <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Carte — {city}
         </h3>
-        {events.length > 0 && (
+        {safeEvents.length > 0 && (
           <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
-            {events.length} événement{events.length !== 1 ? "s" : ""}
+            {safeEvents.length} événement{safeEvents.length !== 1 ? "s" : ""}
           </span>
         )}
       </div>
