@@ -109,6 +109,17 @@ const EventsList = ({ data }: EventsListProps) => {
                       {event.location || event.location_name}
                     </span>
                   )}
+                  {(event.location || event.location_name || event.location_address) && (
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.location_address || event.location || event.location_name || "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary transition-colors hover:bg-primary/20"
+                    >
+                      <Navigation className="h-2.5 w-2.5" />
+                      Itinéraire
+                    </a>
+                  )}
                 </div>
               </motion.div>
             ))}
