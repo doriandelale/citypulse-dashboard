@@ -137,7 +137,7 @@ const MapSection = ({ city, aqi, events }: MapSectionProps) => {
       map.remove();
       mapInstanceRef.current = null;
     };
-  }, [city, aqi, events]);
+  }, [city, aqi, safeEvents]);
 
   return (
     <div className="dashboard-card overflow-hidden p-0">
