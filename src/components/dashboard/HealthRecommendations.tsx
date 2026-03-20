@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Heart, Running, Bike, TreePine, Home, Umbrella, Snowflake, Sun, AlertTriangle } from "lucide-react";
+import { Heart, TreePine, Home, Umbrella, Snowflake, Sun, AlertTriangle } from "lucide-react";
 import type { WeatherApiResponse, AirQualityApiResponse } from "@/services/api";
 
 // Use Activity instead of Running (not in lucide)

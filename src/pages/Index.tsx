@@ -84,6 +84,9 @@ const Index = () => {
           </p>
         </div>
 
+        {/* Alert Banner */}
+        <AlertBanner weather={weather.data} air={air.data} />
+
         <div className="grid gap-5 md:grid-cols-2">
           {/* Score Urbain */}
           <div className="md:col-span-2">
@@ -98,6 +101,16 @@ const Index = () => {
           {/* Air Quality + Prediction */}
           {air.loading ? <CardLoader /> : air.error ? <CardError message={air.error} onRetry={air.refetch} /> : air.data && <AirQualityCard data={air.data} />}
           <PredictionCard />
+
+          {/* Health Recommendations */}
+          <div className="md:col-span-2">
+            <HealthRecommendations weather={weather.data} air={air.data} />
+          </div>
+
+          {/* City Insights */}
+          <div className="md:col-span-2">
+            <CityInsights city={selectedCity} />
+          </div>
 
           {/* Map */}
           <div className="md:col-span-2">
