@@ -8,6 +8,9 @@ import EventsList from "@/components/dashboard/EventsList";
 import PredictionCard from "@/components/dashboard/PredictionCard";
 import MapSection from "@/components/dashboard/MapSection";
 import DarkModeToggle from "@/components/dashboard/DarkModeToggle";
+import AlertBanner from "@/components/dashboard/AlertBanner";
+import HealthRecommendations from "@/components/dashboard/HealthRecommendations";
+import CityInsights from "@/components/dashboard/CityInsights";
 import { CardLoader, CardError } from "@/components/dashboard/CardStates";
 import { useFetch } from "@/hooks/useFetch";
 import { getWeather, getForecast, getAirQuality, getEvents, getUrbanScore } from "@/services/api";
@@ -81,6 +84,9 @@ const Index = () => {
           </p>
         </div>
 
+        {/* Alert Banner */}
+        <AlertBanner weather={weather.data} air={air.data} />
+
         <div className="grid gap-5 md:grid-cols-2">
           {/* Score Urbain */}
           <div className="md:col-span-2">
@@ -95,6 +101,16 @@ const Index = () => {
           {/* Air Quality + Prediction */}
           {air.loading ? <CardLoader /> : air.error ? <CardError message={air.error} onRetry={air.refetch} /> : air.data && <AirQualityCard data={air.data} />}
           <PredictionCard />
+
+          {/* Health Recommendations */}
+          <div className="md:col-span-2">
+            <HealthRecommendations weather={weather.data} air={air.data} />
+          </div>
+
+          {/* City Insights */}
+          <div className="md:col-span-2">
+            <CityInsights city={selectedCity} />
+          </div>
 
           {/* Map */}
           <div className="md:col-span-2">
